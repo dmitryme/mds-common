@@ -1,0 +1,7 @@
+Content:
+* mds_server - wrapper for gen_server. Creates logger and reads configuration
+* mds_logger - async logger. Logs info in separate log dir for each server. Uses log rotation by size and date, log
+  level, eMain sending in case of error.
+* mds_utils - some utils, used by mds_logger and mds_server
+* mds_unicode - converts utf8 to cp1251 and lists of characters to urlencoded representation
+* mds_xml - some helpful utilities for reading xml data
