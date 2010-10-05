@@ -1,0 +1,7 @@
+{application, 'mds-common',
+ [
+  {description, ""},
+  {vsn, "1.0"},
+  {registered, []},
+  {env, []}
+ ]}.
