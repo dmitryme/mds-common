@@ -19,6 +19,7 @@
 
 -export([
       start/2,
+      start/3,
       stop/1,
       init/1,
       terminate/2,
@@ -49,19 +50,26 @@ behaviour_info(_Other) ->
 
 -define(LOGGER_NAME(Mod), atom_to_list(Mod) ++ "_logger").
 
-%% start({global, Mod}, Opts) -> Pid()
+%% start({global, Name}, Mod, Opts) -> Pid()
 %% Types:
-%%    Mod = atom().
+%%    Name = atom().
+%%    Mod = atom() - callback module name
 %%    Opts = [ServerOptions | LoggerOptions | UserDefOpts].
 %%    ServerOptions = {mds_server, [{root_dir, String()}, {working_dir, String()}]}
 %%    LoggerOptions = {mds_logger, [<see mds_logger for details>]}
 %%    UserDefOptions = {atom(), [Option]}
 %%    Option = term()
-start({global, Mod}, Opts) ->
-   gen_server:start_link({global, Mod}, ?MODULE, [#state{module = Mod, options = Opts}], []);
+start({global, Name}, Module, Opts) ->
+   gen_server:start_link({global, Name}, ?MODULE, [#state{module = Module, options = Opts}], []);
 
-start({local, Mod}, Opts) ->
-   gen_server:start_link({local, Mod}, ?MODULE, [#state{module = Mod, options = Opts}], []).
+start({local, Name}, Module, Opts) ->
+   gen_server:start_link({local, Name}, ?MODULE, [#state{module = Module, options = Opts}], []).
+
+start({global, Name}, Opts) ->
+   gen_server:start_link({global, Name}, ?MODULE, [#state{module = Name, options = Opts}], []);
+
+start({local, Name}, Opts) ->
+   gen_server:start_link({local, Name}, ?MODULE, [#state{module = Name, options = Opts}], []).
 
 stop(Mod) ->
    gen_server:call(Mod, stop),
