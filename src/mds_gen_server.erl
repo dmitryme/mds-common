@@ -71,8 +71,8 @@ start({global, Name}, Opts) ->
 start({local, Name}, Opts) ->
    gen_server:start_link({local, Name}, ?MODULE, [#state{module = Name, options = Opts}], []).
 
-stop(Mod) ->
-   gen_server:call(Mod, stop),
+stop(Name) ->
+   gen_server:call(Name, stop),
    ok.
 
 init([State]) ->
