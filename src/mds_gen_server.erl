@@ -15,7 +15,7 @@
 
 -record(log_info, {lname, lpid, icount = 1}).
 
--record(state, {module, options, linfo = undefined, mod_state = undefined}).
+-record(state, {name, module, options, linfo = undefined, mod_state = undefined}).
 
 -export([
       start/2,
@@ -60,29 +60,29 @@ behaviour_info(_Other) ->
 %%    UserDefOptions = {atom(), [Option]}
 %%    Option = term()
 start({global, Name}, Module, Opts) ->
-   gen_server:start_link({global, Name}, ?MODULE, [#state{module = Module, options = Opts}], []);
+   gen_server:start_link({global, Name}, ?MODULE, [#state{name = Name, module = Module, options = Opts}], []);
 
 start({local, Name}, Module, Opts) ->
-   gen_server:start_link({local, Name}, ?MODULE, [#state{module = Module, options = Opts}], []).
+   gen_server:start_link({local, Name}, ?MODULE, [#state{name = Name, module = Module, options = Opts}], []).
 
 start({global, Name}, Opts) ->
-   gen_server:start_link({global, Name}, ?MODULE, [#state{module = Name, options = Opts}], []);
+   gen_server:start_link({global, Name}, ?MODULE, [#state{name = Name, module = Name, options = Opts}], []);
 
 start({local, Name}, Opts) ->
-   gen_server:start_link({local, Name}, ?MODULE, [#state{module = Name, options = Opts}], []).
+   gen_server:start_link({local, Name}, ?MODULE, [#state{name = Name, module = Name, options = Opts}], []).
 
 stop(Name) ->
    gen_server:call(Name, stop),
    ok.
 
 init([State]) ->
-   Mod = State#state.module,
-   LoggerName = mds_utils:list_to_atom(?LOGGER_NAME(Mod)),
+   Name = State#state.name,
+   LoggerName = mds_utils:list_to_atom(?LOGGER_NAME(Name)),
 
    %% normalize mds_server options. Add root_dir, working_dir if needed.
    ServerOpts = dict:from_list(get_param(mds_server, State#state.options, [{root_dir, "."}, {working_dir,
-               atom_to_list(Mod)}])),
-   WorkingDir = get_param(working_dir, dict:to_list(ServerOpts), atom_to_list(Mod)),
+               atom_to_list(Name)}])),
+   WorkingDir = get_param(working_dir, dict:to_list(ServerOpts), atom_to_list(Name)),
    NormServerOpts = dict:store(working_dir, WorkingDir, ServerOpts),
 
    % normalize mds_logger options
@@ -96,6 +96,7 @@ init([State]) ->
    NewOpts = dict:store(mds_server, dict:to_list(NormServerOpts), AllOpts),
    NewOptsL = dict:store(mds_logger, dict:to_list(NormLoggerOpts), NewOpts),
    NewState = State#state{options = dict:to_list(NewOptsL)},
+   Mod = State#state.module,
    Res = Mod:on_start(NewState#state.options),
    case Res of
      {ok, ModState} ->
@@ -105,23 +106,23 @@ init([State]) ->
      _ -> Res
    end.
 
-call({global, Mod}, Msg) ->
-   gen_server:call({global, Mod}, Msg);
+call({global, Name}, Msg) ->
+   gen_server:call({global, Name}, Msg);
 
-call(Mod, Msg) ->
-   gen_server:call(Mod, Msg).
+call(Name, Msg) ->
+   gen_server:call(Name, Msg).
 
-call({global, Mod}, Msg, Timeout) ->
-   gen_server:call({global, Mod}, Msg, Timeout);
+call({global, Name}, Msg, Timeout) ->
+   gen_server:call({global, Name}, Msg, Timeout);
 
-call(Mod, Msg, Timeout) ->
-   gen_server:call(Mod, Msg, Timeout).
+call(Name, Msg, Timeout) ->
+   gen_server:call(Name, Msg, Timeout).
 
-cast({global, Mod}, Msg) ->
-   gen_server:cast({global, Mod}, Msg);
+cast({global, Name}, Msg) ->
+   gen_server:cast({global, Name}, Msg);
 
-cast(Mod, Msg) ->
-   gen_server:cast(Mod, Msg).
+cast(Name, Msg) ->
+   gen_server:cast(Name, Msg).
 
 code_change(_, State, _) ->
    {ok, State}.
@@ -188,11 +189,11 @@ handle_info(Msg, State) ->
         throw({uknown_return, Unknown})
   end.
 
-get_existing_log_mod(Mod) ->
-   list_to_existing_atom(?LOGGER_NAME(Mod)).
+get_existing_log_mod(Name) ->
+   list_to_existing_atom(?LOGGER_NAME(Name)).
 
-log(Mod, Level, Format, Data) ->
-   mds_logger:log(get_existing_log_mod(Mod), Level, Format, Data).
+log(Name, Level, Format, Data) ->
+   mds_logger:log(get_existing_log_mod(Name), Level, Format, Data).
 
-log(Mod, Level, Text) ->
-   mds_logger:log(get_existing_log_mod(Mod), Level, Text).
+log(Name, Level, Text) ->
+   mds_logger:log(get_existing_log_mod(Name), Level, Text).
