@@ -48,7 +48,7 @@ behaviour_info(callbacks) ->
 behaviour_info(_Other) ->
    undefined.
 
--define(LOGGER_NAME(Mod), atom_to_list(Mod) ++ "_logger").
+-define(LOGGER_NAME(Name), atom_to_list(Name) ++ "_logger").
 
 %% start({global, Name}, Mod, Opts) -> Pid()
 %% Types:
@@ -192,8 +192,16 @@ handle_info(Msg, State) ->
 get_existing_log_mod(Name) ->
    list_to_existing_atom(?LOGGER_NAME(Name)).
 
+log({local, Name}, Level, Format, Data) ->
+   log(Name, Level, Format, Data);
+log({global, Name}, Level, Format, Data) ->
+   log(Name, Level, Format, Data);
 log(Name, Level, Format, Data) ->
    mds_logger:log(get_existing_log_mod(Name), Level, Format, Data).
 
+log({local, Name}, Level, Text) ->
+   mds_logger:log(get_existing_log_mod(Name), Level, Text);
+log({global, Name}, Level, Text) ->
+   mds_logger:log(get_existing_log_mod(Name), Level, Text);
 log(Name, Level, Text) ->
    mds_logger:log(get_existing_log_mod(Name), Level, Text).
